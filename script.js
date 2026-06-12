@@ -387,7 +387,7 @@ window.submitLogin = async function () {
       }
     });
     if (error) { showToast(`⚠️ Signup Failed: ${error.message}`); return; }
-    showToast('👋 Sign up successful! Sign-in initialized.');
+    showToast('📧 Verification email sent.\nPlease check your inbox and confirm your email.');
   } else {
     showToast('Authenticating...');
     const { data, error } = await supabaseClient.auth.signInWithPassword({ email: emailVal, password: passVal });
