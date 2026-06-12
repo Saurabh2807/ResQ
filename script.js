@@ -1776,8 +1776,21 @@ async function renderChatsInbox() {
 }
 
 // ── Init State / Auth State Listener ───────────────────────────────────────
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
   if (supabaseClient) {
+    try {
+      const { data: { session } } = await supabaseClient.auth.getSession();
+      if (session) {
+        const { data: { user }, error: userError } = await supabaseClient.auth.getUser();
+        if (userError || !user) {
+          console.warn('Session invalid/expired on startup:', userError);
+          await supabaseClient.auth.signOut();
+          showToast('Your session has expired. Please sign in again.');
+        }
+      }
+    } catch (err) {
+      console.error('Session validation error:', err);
+    }
     supabaseClient.auth.onAuthStateChange(async (event, session) => {
       if (session && session.user) {
         currentUser = session.user;
