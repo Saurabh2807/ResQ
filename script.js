@@ -520,10 +520,14 @@ window.submitGoogleLogin = async function () {
     return;
   }
   showToast('🔑 Redirecting to Google Login...');
+  const redirectUrl = window.location.hostname.includes('github.io')
+    ? 'https://saurabh2807.github.io/delete/'
+    : window.location.origin;
+
   const { error } = await supabaseClient.auth.signInWithOAuth({
     provider: 'google',
     options: {
-      redirectTo: window.location.origin
+      redirectTo: redirectUrl
     }
   });
 
