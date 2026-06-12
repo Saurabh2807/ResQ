@@ -67,6 +67,28 @@ let activeChatSubscription = null;
 let activeChatMessages = [];
 let currentChatResource = null;
 
+let publicProfilesCache = new Map();
+
+window.loadPublicProfiles = async function () {
+  if (!supabaseClient) return;
+  try {
+    const { data, error } = await supabaseClient.from('public_profiles').select('id, full_name, profile_photo');
+    if (error) throw error;
+    publicProfilesCache.clear();
+    data.forEach(p => {
+      publicProfilesCache.set(String(p.id), p);
+    });
+  } catch (err) {
+    console.error('Error loading public profiles:', err);
+  }
+};
+
+window.resolveProfileName = function (userId, fallback = 'Anonymous') {
+  if (!userId) return fallback;
+  const prof = publicProfilesCache.get(String(userId));
+  return (prof && prof.full_name) ? prof.full_name : fallback;
+};
+
 let myPostCount = 0;
 let myResponseCount = 0;
 
@@ -167,6 +189,7 @@ async function loadResources() {
   if (!currentUser) return;
   await seedDatabaseIfEmpty();
   try {
+    await loadPublicProfiles();
     const { data, error } = await supabaseClient
       .from('resources')
       .select('*, profiles:user_id ( full_name, profile_photo )')
@@ -179,7 +202,7 @@ async function loadResources() {
       direction: r.resource_type, title: r.title, description: r.description,
       loc: r.location, area: r.location, km: 1.5,
       urgent: r.urgency_level === 'urgent', contact: r.contact_number,
-      name: r.profiles?.full_name || 'Anonymous User',
+      name: resolveProfileName(r.user_id, r.profiles?.full_name || 'Anonymous User'),
       posted: timeAgo(new Date(r.created_at)), lat: r.latitude, lng: r.longitude
     }));
     if (homeSearchLoc.trim()) {
@@ -1067,12 +1090,14 @@ window.showMyResponses = async function () {
     return;
   }
   try {
+    await loadPublicProfiles();
     const { data, error } = await supabaseClient.from('chats').select(`*, resource:resource_id(id,title,category), participant_1_prof:participant_1(full_name), participant_2_prof:participant_2(full_name)`)
       .or(`participant_1.eq.${currentUser.id},participant_2.eq.${currentUser.id}`).order('created_at', { ascending: false });
     if (error) throw error;
     const listHtml = data.map(c => {
       const isPart1 = c.participant_1 === currentUser.id;
-      const peerName = isPart1 ? c.participant_2_prof?.full_name : c.participant_1_prof?.full_name;
+      const peerId = isPart1 ? c.participant_2 : c.participant_1;
+      const peerName = resolveProfileName(peerId, isPart1 ? c.participant_2_prof?.full_name : c.participant_1_prof?.full_name);
       const emoji = c.resource?.category === 'Blood' ? '🩸' : c.resource?.category === 'Transport' ? '🚑' : c.resource?.category === 'Medicine' ? '💊' : c.resource?.category === 'Food' ? '🍱' : '🏠';
       return `
         <div style="display:flex;align-items:flex-start;gap:12px;background:#F8FAFC;border:1px solid #E2E8F0;border-radius:12px;padding:12px;margin-bottom:10px;">
@@ -1184,6 +1209,7 @@ window.openChat = async function (resourceId) {
   let resource = dbResources.find(r => String(r.id) === String(resourceId));
   if (!resource && supabaseClient) {
     try {
+      await loadPublicProfiles();
       const { data } = await supabaseClient.from('resources')
         .select('*, profiles:user_id(full_name, profile_photo)').eq('id', resourceId).single();
       if (data) {
@@ -1193,7 +1219,7 @@ window.openChat = async function (resourceId) {
           direction: data.resource_type, title: data.title, description: data.description,
           loc: data.location, area: data.location, km: 1.5,
           urgent: data.urgency_level === 'urgent', contact: data.contact_number,
-          name: data.profiles?.full_name || 'Anonymous User',
+          name: resolveProfileName(data.user_id, data.profiles?.full_name || 'Anonymous User'),
           posted: timeAgo(new Date(data.created_at)), lat: data.latitude, lng: data.longitude
         };
       }
@@ -1364,6 +1390,7 @@ window.openExistingChat = async function (chatId) {
 
   showToast('Opening chat room...');
   try {
+    await loadPublicProfiles();
     const { data: chat, error: chatErr } = await supabaseClient
       .from('chats')
       .select(`
@@ -1377,8 +1404,8 @@ window.openExistingChat = async function (chatId) {
     if (chatErr) throw chatErr;
 
     const isPart1 = chat.participant_1 === currentUser.id;
-    const peerName = isPart1 ? chat.participant_2_prof?.full_name : chat.participant_1_prof?.full_name;
     const peerId = isPart1 ? chat.participant_2 : chat.participant_1;
+    const peerName = resolveProfileName(peerId, isPart1 ? chat.participant_2_prof?.full_name : chat.participant_1_prof?.full_name);
     const cat = chat.resource?.category;
     const emoji = cat === 'Blood' ? '🩸' : cat === 'Transport' ? '🚑' : cat === 'Medicine' ? '💊' : cat === 'Food' ? '🍱' : (cat === 'Shelter' ? '🏠' : '💬');
 
@@ -1697,6 +1724,7 @@ async function renderChatsInbox() {
     });
   } else {
     try {
+      await loadPublicProfiles();
       const { data, error } = await supabaseClient.from('chats').select(`
         id, resource_id, participant_1, participant_2, created_at,
         resource:resource_id ( id, title, category ),
@@ -1708,7 +1736,8 @@ async function renderChatsInbox() {
 
       chatsData = await Promise.all(data.map(async c => {
         const isPart1 = c.participant_1 === currentUser.id;
-        const peerName = isPart1 ? c.participant_2_prof?.full_name : c.participant_1_prof?.full_name;
+        const peerId = isPart1 ? c.participant_2 : c.participant_1;
+        const peerName = resolveProfileName(peerId, isPart1 ? c.participant_2_prof?.full_name : c.participant_1_prof?.full_name);
         const cat = c.resource?.category;
         const emoji = cat === 'Blood' ? '🩸' : cat === 'Transport' ? '🚑' : cat === 'Medicine' ? '💊' : cat === 'Food' ? '🍱' : '🏠';
 
@@ -1786,6 +1815,8 @@ document.addEventListener('DOMContentLoaded', async () => {
           console.warn('Session invalid/expired on startup:', userError);
           await supabaseClient.auth.signOut();
           showToast('Your session has expired. Please sign in again.');
+        } else {
+          await loadPublicProfiles();
         }
       }
     } catch (err) {
@@ -1794,6 +1825,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     supabaseClient.auth.onAuthStateChange(async (event, session) => {
       if (session && session.user) {
         currentUser = session.user;
+        await loadPublicProfiles();
         try {
           const { data: profile } = await supabaseClient.from('profiles').select('*').eq('id', currentUser.id);
           if (profile && profile.length > 0) {

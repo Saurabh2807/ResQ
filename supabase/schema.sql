@@ -309,3 +309,50 @@ CREATE POLICY "Resource images write owner" ON storage.objects
 ALTER PUBLICATION supabase_realtime ADD TABLE public.resources;
 ALTER PUBLICATION supabase_realtime ADD TABLE public.messages;
 ALTER PUBLICATION supabase_realtime ADD TABLE public.notifications;
+
+-- =========================================================================
+-- 8. GLOBAL RESOURCE NOTIFICATION TRIGGER
+-- =========================================================================
+
+-- Trigger function to automatically create public.notifications entries for all users
+-- whenever a new resource is inserted into public.resources.
+CREATE OR REPLACE FUNCTION public.notify_new_resource()
+RETURNS trigger AS $$
+DECLARE
+    profile_rec RECORD;
+    user_name text;
+    resource_type_str text;
+BEGIN
+    -- Get the full name of the user who posted the resource
+    SELECT full_name INTO user_name FROM public.profiles WHERE id = NEW.user_id;
+    IF user_name IS NULL OR user_name = '' THEN
+        user_name := 'Anonymous';
+    END IF;
+
+    -- Determine the resource type string (Request or Offer)
+    IF NEW.resource_type = 'need' THEN
+        resource_type_str := 'Request';
+    ELSE
+        resource_type_str := 'Offer';
+    END IF;
+
+    -- Loop through all profiles and insert a notification for each
+    FOR profile_rec IN SELECT id FROM public.profiles LOOP
+        INSERT INTO public.notifications (user_id, type, title, content, is_read, metadata)
+        VALUES (
+            profile_rec.id,
+            'new_resource_match',
+            user_name || ' posted a new ' || NEW.category || ' ' || resource_type_str,
+            COALESCE(NEW.description, ''),
+            false,
+            jsonb_build_object('resource_id', NEW.id, 'posted_by', NEW.user_id)
+        );
+    END LOOP;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Create trigger on insert into resources
+CREATE OR REPLACE TRIGGER on_resource_created
+    AFTER INSERT ON public.resources
+    FOR EACH ROW EXECUTE FUNCTION public.notify_new_resource();
