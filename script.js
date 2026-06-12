@@ -1046,7 +1046,7 @@ window.showMyResponses = async function () {
           <div style="font-size:11.5px;color:#64748B;margin-top:2px;">Chat partner: <b>${c.peer_name || 'Anonymous'}</b></div>
           <div style="display:flex;align-items:center;justify-content:space-between;margin-top:8px;">
             <span style="font-size:10px;font-weight:800;background:#DBEAFE;color:#2563EB;padding:2px 6px;border-radius:999px;">Active Thread</span>
-            <button onclick="closeModal(); openChat('${c.resource_id}')" style="border:none;background:#F1F5F9;color:#475569;font-size:11px;font-weight:700;cursor:pointer;padding:4px 10px;border-radius:8px;">💬 Open Chat</button>
+            <button onclick="closeModal(); openExistingChat('${c.id}')" style="border:none;background:#F1F5F9;color:#475569;font-size:11px;font-weight:700;cursor:pointer;padding:4px 10px;border-radius:8px;">💬 Open Chat</button>
           </div>
         </div>
       </div>`).join('');
@@ -1076,7 +1076,7 @@ window.showMyResponses = async function () {
             <div style="font-size:11.5px;color:#64748B;margin-top:2px;">Chat partner: <b>${peerName || 'Anonymous'}</b></div>
             <div style="display:flex;align-items:center;justify-content:space-between;margin-top:8px;">
               <span style="font-size:10px;font-weight:800;background:#DBEAFE;color:#2563EB;padding:2px 6px;border-radius:999px;">Active Thread</span>
-              <button onclick="closeModal(); openChat('${c.resource_id}')" style="border:none;background:#F1F5F9;color:#475569;font-size:11px;font-weight:700;cursor:pointer;padding:4px 10px;border-radius:8px;">💬 Open Chat</button>
+              <button onclick="closeModal(); openExistingChat('${c.id}')" style="border:none;background:#F1F5F9;color:#475569;font-size:11px;font-weight:700;cursor:pointer;padding:4px 10px;border-radius:8px;">💬 Open Chat</button>
             </div>
           </div>
         </div>`;
@@ -1297,6 +1297,105 @@ window.openChat = async function (resourceId) {
     }));
 
     // Mark all unread messages as read when opening the chat
+    const unreadIds = messages.filter(m => m.sender_id !== currentUser.id && !m.is_read).map(m => m.id);
+    if (unreadIds.length > 0) {
+      await supabaseClient.from('messages').update({ is_read: true }).in('id', unreadIds);
+      pendingChatUnreadCount = Math.max(0, pendingChatUnreadCount - unreadIds.length);
+      updateChatBadge(pendingChatUnreadCount);
+    }
+
+    renderChatLayout(resource);
+    subscribeToChatMessages();
+  } catch (err) {
+    console.error('Chat entry failed:', err);
+    showToast(`⚠️ Chat failed: ${err.message}`);
+    window.closeChat();
+  }
+};
+
+window.openExistingChat = async function (chatId) {
+  if (!currentUser) { showToast('⚠️ Please sign in to message'); return; }
+
+  const botNav = document.querySelector('.botnav');
+  if (botNav) botNav.style.display = 'none';
+  const sosFab = document.getElementById('sos-fab');
+  if (sosFab) sosFab.style.display = 'none';
+  const topBar = document.getElementById('app-topbar');
+  if (topBar) topBar.style.display = 'none';
+
+  if (!supabaseClient) {
+    showToast('💬 Opening mock chat room...');
+    const chatRoom = mockChats.find(c => String(c.id) === String(chatId));
+    if (!chatRoom) {
+      showToast('⚠️ Chat not found.');
+      window.closeChat();
+      return;
+    }
+    activeChatRoomId = chatRoom.id;
+    activeChatMessages = chatRoom.messages || [];
+
+    // Find/create resource for display
+    let resource = dbResources.find(r => String(r.id) === String(chatRoom.resource_id));
+    if (!resource) {
+      const sample = SAMPLE_RESOURCES.find(r => String(r.id) === String(chatRoom.resource_id));
+      resource = sample ? {
+        id: sample.id, user_id: 'mock-user-id', type: sample.type, emoji: sample.emoji,
+        direction: sample.direction, title: sample.title,
+        description: `Mock coordinates set in ${sample.area || sample.loc}.`,
+        loc: sample.area || sample.loc, area: sample.area || sample.loc, km: sample.km || 1.5,
+        urgent: sample.urgent, contact: sample.contact, name: sample.name,
+        posted: sample.posted || '5 min ago', lat: sample.lat, lng: sample.lng
+      } : {
+        id: chatRoom.resource_id, user_id: 'mock-user-id', type: 'general', emoji: '💬',
+        direction: 'need', title: 'Direct Message', description: '', loc: 'Unknown', area: 'Unknown',
+        km: 1.0, urgent: false, contact: '', name: 'Chat Partner', posted: 'Just now', lat: 23.25, lng: 77.41
+      };
+    }
+    currentChatResource = resource;
+    renderChatLayout(resource);
+    return;
+  }
+
+  showToast('Opening chat room...');
+  try {
+    const { data: chat, error: chatErr } = await supabaseClient
+      .from('chats')
+      .select(`
+        id, resource_id, participant_1, participant_2,
+        resource:resource_id ( id, title, category, user_id ),
+        participant_1_prof:participant_1 ( full_name ),
+        participant_2_prof:participant_2 ( full_name )
+      `)
+      .eq('id', chatId)
+      .single();
+    if (chatErr) throw chatErr;
+
+    const isPart1 = chat.participant_1 === currentUser.id;
+    const peerName = isPart1 ? chat.participant_2_prof?.full_name : chat.participant_1_prof?.full_name;
+    const peerId = isPart1 ? chat.participant_2 : chat.participant_1;
+    const cat = chat.resource?.category;
+    const emoji = cat === 'Blood' ? '🩸' : cat === 'Transport' ? '🚑' : cat === 'Medicine' ? '💊' : cat === 'Food' ? '🍱' : (cat === 'Shelter' ? '🏠' : '💬');
+
+    const resource = {
+      id: chat.resource_id,
+      user_id: chat.resource?.user_id || peerId,
+      emoji: emoji,
+      name: peerName || 'Anonymous User',
+      title: chat.resource?.title || 'Direct Chat'
+    };
+
+    activeChatRoomId = chat.id;
+    currentChatResource = resource;
+
+    const { data: messages, error: msgError } = await supabaseClient.from('messages').select('*')
+      .eq('chat_id', activeChatRoomId).order('created_at', { ascending: true });
+    if (msgError) throw msgError;
+
+    activeChatMessages = messages.map(m => ({
+      sender: m.sender_id === currentUser.id ? 'sent' : 'received',
+      text: m.content, time: getFormattedTime(new Date(m.created_at))
+    }));
+
     const unreadIds = messages.filter(m => m.sender_id !== currentUser.id && !m.is_read).map(m => m.id);
     if (unreadIds.length > 0) {
       await supabaseClient.from('messages').update({ is_read: true }).in('id', unreadIds);
@@ -1652,7 +1751,7 @@ async function renderChatsInbox() {
     const preview = previewRaw.length > 45 ? previewRaw.substring(0, 45) + '…' : previewRaw;
     const hasUnread = c.unread_count > 0;
     return `
-    <div onclick="openChat('${c.resource_id}')" style="display:flex;align-items:center;gap:12px;background:#FFFFFF;border:1.5px solid ${hasUnread ? '#FCA5A5' : '#E2E8F0'};border-radius:16px;padding:14px;box-shadow:${hasUnread ? '0 2px 14px rgba(220,38,38,0.1)' : '0 1px 6px rgba(0,0,0,0.03)'};cursor:pointer;transition:all 0.15s;">
+    <div onclick="openExistingChat('${c.id}')" style="display:flex;align-items:center;gap:12px;background:#FFFFFF;border:1.5px solid ${hasUnread ? '#FCA5A5' : '#E2E8F0'};border-radius:16px;padding:14px;box-shadow:${hasUnread ? '0 2px 14px rgba(220,38,38,0.1)' : '0 1px 6px rgba(0,0,0,0.03)'};cursor:pointer;transition:all 0.15s;">
       <div style="position:relative;flex-shrink:0;">
         <div style="width:48px;height:48px;border-radius:14px;background:linear-gradient(135deg,#FEF2F2,#FFF0F0);display:flex;align-items:center;justify-content:center;font-size:24px;">${c.emoji}</div>
         ${hasUnread ? `<span style="position:absolute;top:-5px;right:-5px;min-width:18px;height:18px;background:#DC2626;color:white;font-size:10px;font-weight:900;border-radius:999px;border:2px solid white;display:inline-flex;align-items:center;justify-content:center;padding:0 3px;">${c.unread_count > 9 ? '9+' : c.unread_count}</span>` : ''}
