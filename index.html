@@ -420,12 +420,13 @@
           </svg>
           <span>Post</span>
         </button>
-        <button class="nb" id="nav-chats" onclick="appNav('chats')">
+        <button class="nb" id="nav-chats" onclick="appNav('chats')" style="position:relative;">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
             stroke-linecap="round" stroke-linejoin="round">
             <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
           </svg>
           <span>Chats</span>
+          <span id="chat-unread-badge" style="display:none;position:absolute;top:4px;right:8px;min-width:16px;height:16px;background:#DC2626;color:white;font-size:9px;font-weight:900;border-radius:999px;border:2px solid white;display:none;align-items:center;justify-content:center;padding:0 3px;z-index:5;"></span>
         </button>
         <button class="nb" id="nav-alerts" onclick="appNav('alerts')">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
