@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ResQ — Real-Time Emergency Resource Coordination Platform</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap"
+    rel="stylesheet" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+
+  <!-- ═══════════════════════════════════════
+     SCREEN 1: LANDING
+═══════════════════════════════════════ -->
+  <!-- ═══════════════════════════════════════
+     SCREEN 1: LANDING
+═══════════════════════════════════════ -->
+  <div class="screen show" id="s-landing">
+    <div class="landing-bg-new">
+
+      <!-- Top Logo Block -->
+      <div class="fi"
+        style="display:flex;align-items:center;justify-content:center;gap:18px;margin-top:20px;margin-bottom:24px;text-align:left;max-width:380px;width:100%;margin-left:auto;margin-right:auto;">
+        <!-- Logo Pin -->
+        <div
+          style="flex-shrink:0;width:64px;height:76px;display:flex;align-items:center;justify-content:center;position:relative;">
+          <svg viewBox="0 0 100 120" width="64" height="76" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M50 0C22.4 0 0 22.4 0 50C0 85 50 120 50 120C50 120 100 85 100 50C100 22.4 77.6 0 50 0Z"
+              fill="#DC2626" />
+            <path d="M50 30 C 45 18, 25 18, 25 43 C 25 63, 50 84, 50 84 C 50 84, 75 63, 75 43 C 75 18, 55 18, 50 30 Z"
+              fill="white" />
+            <path d="M30 46H38L44 32L52 58L58 40L62 46H70" stroke="#DC2626" stroke-width="4.5" stroke-linecap="round"
+              stroke-linejoin="round" />
+          </svg>
+        </div>
+        <!-- Logo Text -->
+        <div style="display:flex;flex-direction:column;justify-content:center;flex:1;">
+          <h1 style="font-size:36px;font-weight:900;line-height:1;color:#000000;margin:0;letter-spacing:-1px;">Res<span
+              style="color:#DC2626;">Q</span></h1>
+          <p
+            style="font-size:10.5px;font-weight:700;color:#000000;margin-top:6px;line-height:1.3;letter-spacing:-0.2px;text-transform:uppercase;">
+            Real-Time Emergency<br />Resource Coordination Platform</p>
+          <div style="display:flex;align-items:center;gap:6px;margin-top:8px;width:100%;">
+            <div style="flex:1;height:1.5px;background:#DC2626;"></div>
+            <div style="width:5px;height:5px;border-radius:50%;background:#DC2626;"></div>
+            <div style="flex:1;height:1.5px;background:#DC2626;"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Main illustration -->
+      <img src="ambulance_rescue.png" alt="ResQ Emergency Rescue" class="landing-illustration fi d1" />
+
+      <!-- Tagline text & pulse line -->
+      <div class="fi d2" style="text-align:center;margin-top:14px;margin-bottom:28px;max-width:380px;width:100%;">
+        <p style="font-size:16px;font-weight:600;color:#64748B;margin:0;letter-spacing:-0.2px;">Together, We Can</p>
+        <p
+          style="font-size:24px;font-weight:900;color:#DC2626;margin:2px 0 0;letter-spacing:-0.5px;text-transform:capitalize;">
+          Save More Lives</p>
+
+        <!-- Pulse Heartbeat SVG -->
+        <div class="heartbeat-wrap">
+          <div class="heartbeat-line"></div>
+          <svg width="40" height="24" viewBox="0 0 24 24" fill="none" stroke="#DC2626" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;">
+            <path
+              d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" />
+          </svg>
+          <div class="heartbeat-line"></div>
+        </div>
+      </div>
+
+      <!-- Unified Entry Button -->
+      <button class="btn-get-started fi d3" onclick="showScreen('s-login')">
+        <span>Get Started</span>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+          stroke-linecap="round" stroke-linejoin="round">
+          <line x1="5" y1="12" x2="19" y2="12" />
+          <polyline points="12 5 19 12 12 19" />
+        </svg>
+      </button>
+
+      <!-- Wave at bottom -->
+      <div class="bottom-wave-container">
+        <svg data-name="Layer 1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 120" preserveAspectRatio="none">
+          <path
+            d="M321.39,56.44c58-10.79,114.16-30.13,172-41.86,82.39-16.72,168.19-17.73,250.45-.39C823.78,31,906.67,72,985.66,92.83c70.05,18.48,146.53,26.09,214.34,3V0H0V27.35A600.21,600.21,0,0,1,321.39,56.44Z"
+            class="shape-fill"></path>
+        </svg>
+      </div>
+
+      <p style="color:#94A3B8;font-size:11px;margin-top:36px;z-index:2;font-weight:600;">ResQ v1.0 · Emergency Resource
+        coordination</p>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════
+     SCREEN 1.2: LOGIN SCREEN
+═══════════════════════════════════════ -->
+  <div class="screen" id="s-login">
+    <div class="login-screen-bg seeker-mode" id="login-container">
+
+      <!-- Top banner with outline circle profile avatar -->
+      <div class="login-header-banner seeker-mode" id="login-banner">
+        <!-- Back button -->
+        <button class="login-back-btn" onclick="backToLanding()">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+            stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="15 18 9 12 15 6" />
+          </svg>
+        </button>
+
+        <!-- Avatar profile outline icon -->
+        <div class="login-avatar-circle">
+          <svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+            <circle cx="12" cy="7" r="4" />
+          </svg>
+        </div>
+      </div>
+
+      <!-- White sheet overlapping the banner -->
+      <div class="login-sheet">
+        <!-- Badge -->
+        <div class="login-badge seeker-mode" id="login-mode-badge" style="background:#FFF1F2;color:#DC2626;">
+          <span>🏥 ResQ Portal</span>
+        </div>
+
+        <!-- Titles -->
+        <h2 class="login-title" id="login-title">Welcome back</h2>
+        <p class="login-subtitle" id="login-subtitle">Sign in to access emergency resources</p>
+
+        <!-- Form fields -->
+        <!-- Signup-only fields (hidden by default) -->
+        <div class="login-form-group signup-only hidden" style="margin-bottom: 15px;">
+          <label class="login-form-label">Full Name</label>
+          <div class="login-input-wrap">
+            <span class="login-input-icon">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                <circle cx="12" cy="7" r="4" />
+              </svg>
+            </span>
+            <input type="text" id="login-fullname" class="login-input" placeholder="Enter your full name" value="" />
+          </div>
+        </div>
+
+        <div class="login-form-group signup-only hidden" style="margin-bottom: 15px;">
+          <label class="login-form-label">Phone Number</label>
+          <div class="login-input-wrap">
+            <span class="login-input-icon">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <path
+                  d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
+              </svg>
+            </span>
+            <input type="tel" id="login-phone" class="login-input" placeholder="+91-XXXXX-XXXXX" value="" />
+          </div>
+        </div>
+
+        <div class="login-form-group">
+          <label class="login-form-label">Email Address</label>
+          <div class="login-input-wrap">
+            <span class="login-input-icon">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
+                <polyline points="22,6 12,13 2,6" />
+              </svg>
+            </span>
+            <input type="email" id="login-email" class="login-input" placeholder="you@example.com" value="" />
+          </div>
+        </div>
+
+        <div class="login-form-group" style="margin-bottom: 20px;">
+          <label class="login-form-label">Password</label>
+          <div class="login-input-wrap">
+            <span class="login-input-icon">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+              </svg>
+            </span>
+            <input type="password" id="login-password" class="login-input" placeholder="Enter your password" value="" />
+            <button class="login-input-toggle" id="login-password-toggle" onclick="toggleLoginPassword()">
+              <!-- Eye icon outline -->
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round" id="eye-icon">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                <circle cx="12" cy="12" r="3" />
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- Remember me and Forgot password -->
+        <div class="login-options" id="login-options-container">
+          <label class="login-remember">
+            <input type="checkbox" id="login-remember-me" checked />
+            <span>Remember me</span>
+          </label>
+          <a href="#" class="login-forgot"
+            onclick="event.preventDefault(); showToast('Password reset link sent to your email!');">Forgot Password?</a>
+        </div>
+
+        <!-- Sign In Button -->
+        <button class="login-submit-btn" id="login-submit-btn" onclick="submitLogin()">Sign In</button>
+
+        <!-- Divider -->
+        <div class="login-divider">
+          <div class="login-divider-line"></div>
+          <div class="login-divider-text">OR CONTINUE WITH</div>
+          <div class="login-divider-line"></div>
+        </div>
+
+        <!-- Continue with Google Button -->
+        <button class="login-google-btn" onclick="submitGoogleLogin()">
+          <svg width="18" height="18" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0;">
+            <path
+              d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+              fill="#4285F4" />
+            <path
+              d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.56-2.77c-.98.66-2.23 1.06-3.72 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+              fill="#34A853" />
+            <path
+              d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"
+              fill="#FBBC05" />
+            <path
+              d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
+              fill="#EA4335" />
+          </svg>
+          <span>Continue with Google</span>
+        </button>
+
+        <!-- Continue as Guest (Demo) Button -->
+        <button class="login-google-btn" style="margin-top: 10px; border-color: #E2E8F0;" onclick="submitGuestLogin()">
+          <span style="font-size:16px; margin-right: 4px;">👤</span>
+          <span>Continue as Guest (Demo)</span>
+        </button>
+
+        <!-- Footer Link -->
+        <div class="login-footer-text" id="login-footer-text">
+          Don't have an account? <a href="#" onclick="event.preventDefault(); toggleAuthMode();">Sign up free</a>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════
+     SCREEN 1.5: ROLE SELECTION SCREEN
+     ═══════════════════════════════════════ -->
+  <div class="screen" id="s-role-select">
+    <div class="landing-bg-new" style="justify-content:center;">
+
+      <!-- Logo Block -->
+      <div class="fi"
+        style="display:flex;align-items:center;justify-content:center;gap:18px;margin-bottom:24px;text-align:left;max-width:380px;width:100%;margin-left:auto;margin-right:auto;">
+        <!-- Logo Pin -->
+        <div
+          style="flex-shrink:0;width:56px;height:66px;display:flex;align-items:center;justify-content:center;position:relative;">
+          <svg viewBox="0 0 100 120" width="56" height="66" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M50 0C22.4 0 0 22.4 0 50C0 85 50 120 50 120C50 120 100 85 100 50C100 22.4 77.6 0 50 0Z"
+              fill="#DC2626" />
+            <path d="M50 30 C 45 18, 25 18, 25 43 C 25 63, 50 84, 50 84 C 50 84, 75 63, 75 43 C 75 18, 55 18, 50 30 Z"
+              fill="white" />
+            <path d="M30 46H38L44 32L52 58L58 40L62 46H70" stroke="#DC2626" stroke-width="4.5" stroke-linecap="round"
+              stroke-linejoin="round" />
+          </svg>
+        </div>
+        <!-- Logo Text -->
+        <div style="display:flex;flex-direction:column;justify-content:center;flex:1;">
+          <h1 style="font-size:32px;font-weight:900;line-height:1;color:#000000;margin:0;letter-spacing:-1px;">Res<span
+              style="color:#DC2626;">Q</span></h1>
+          <p
+            style="font-size:9.5px;font-weight:700;color:#000000;margin-top:4px;line-height:1.3;letter-spacing:-0.2px;text-transform:uppercase;">
+            Real-Time Emergency Portal</p>
+        </div>
+      </div>
+
+      <!-- Tagline -->
+      <div class="fi d1" style="text-align:center;margin-bottom:28px;max-width:380px;width:100%;">
+        <p style="font-size:22px;font-weight:900;color:#0F172A;margin:0;letter-spacing:-0.5px;">Choose Your Role</p>
+        <p style="font-size:13.5px;color:#64748B;margin:6px 0 0;">How would you like to use the app today?</p>
+      </div>
+
+      <!-- Seeker / Provider Option Cards -->
+      <div class="fi d2" style="width:100%;max-width:380px;display:flex;flex-direction:column;gap:16px;z-index:5;">
+
+        <!-- Seeker Card (I Need Help) -->
+        <div class="btn-card seeker" onclick="selectRole('seeker')">
+          <div class="btn-card-icon">
+            <!-- Exclamation circle outline/solid -->
+            <div
+              style="width:30px;height:30px;border-radius:50%;background:#DC2626;display:flex;align-items:center;justify-content:center;color:white;font-weight:900;font-size:18px;">
+              !</div>
+          </div>
+          <div style="flex:1;">
+            <h2 class="btn-card-title">I Need Help</h2>
+            <p class="btn-card-desc">Find blood, transport, medicines and other resources near you</p>
+          </div>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#DC2626" stroke-width="3.5"
+            stroke-linecap="round" stroke-linejoin="round" class="btn-card-arrow">
+            <polyline points="9 18 15 12 9 6" />
+          </svg>
+        </div>
+
+        <!-- Provider Card (I Can Help) -->
+        <div class="btn-card provider" onclick="selectRole('provider')">
+          <div class="btn-card-icon" style="background:#E8F5E9;">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#16A34A" stroke-width="2.5"
+              stroke-linecap="round" stroke-linejoin="round">
+              <!-- Heart filled/outlined -->
+              <path
+                d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"
+                fill="#16A34A" />
+            </svg>
+          </div>
+          <div style="flex:1;">
+            <h2 class="btn-card-title">I Can Help</h2>
+            <p class="btn-card-desc">List resources you can share with people in need</p>
+          </div>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#16A34A" stroke-width="3.5"
+            stroke-linecap="round" stroke-linejoin="round" class="btn-card-arrow">
+            <polyline points="9 18 15 12 9 6" />
+          </svg>
+        </div>
+
+      </div>
+
+      <!-- Bottom Wave -->
+      <div class="bottom-wave-container">
+        <svg data-name="Layer 1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 120" preserveAspectRatio="none">
+          <path
+            d="M321.39,56.44c58-10.79,114.16-30.13,172-41.86,82.39-16.72,168.19-17.73,250.45-.39C823.78,31,906.67,72,985.66,92.83c70.05,18.48,146.53,26.09,214.34,3V0H0V27.35A600.21,600.21,0,0,1,321.39,56.44Z"
+            class="shape-fill"></path>
+        </svg>
+      </div>
+
+      <p style="color:#94A3B8;font-size:11px;margin-top:36px;z-index:2;font-weight:600;">ResQ Portal · Switch roles
+        anytime inside settings</p>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════
+     SCREEN 2: MAIN APP
+     ═══════════════════════════════════════ -->
+  <div class="screen" id="s-app">
+
+    <!-- Top Bar -->
+    <div class="topbar" id="app-topbar">
+      <div class="topbar-inner">
+        <div onclick="showScreen('s-role-select')"
+          style="display:flex;align-items:center;gap:8px;cursor:pointer;user-select:none;" title="Choose Active Role">
+          <div style="flex-shrink:0;width:30px;height:30px;display:flex;align-items:center;justify-content:center;">
+            <svg viewBox="0 0 100 120" width="24" height="28" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M50 0C22.4 0 0 22.4 0 50C0 85 50 120 50 120C50 120 100 85 100 50C100 22.4 77.6 0 50 0Z"
+                fill="#DC2626" />
+              <path d="M50 30 C 45 18, 25 18, 25 43 C 25 63, 50 84, 50 84 C 50 84, 75 63, 75 43 C 75 18, 55 18, 50 30 Z"
+                fill="white" />
+              <path d="M30 46H38L44 32L52 58L58 40L62 46H70" stroke="#DC2626" stroke-width="4.5" stroke-linecap="round"
+                stroke-linejoin="round" />
+            </svg>
+          </div>
+          <span style="font-size:17px;font-weight:900;color:#000000;letter-spacing:-0.5px;">Res<span
+              style="color:#DC2626;">Q</span></span>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <button onclick="appNav('alerts')"
+            style="position:relative;width:34px;height:34px;border-radius:10px;border:none;background:#F1F5F9;cursor:pointer;display:flex;align-items:center;justify-content:center;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#475569" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round">
+              <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+              <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+            </svg>
+            <span id="alert-dot"
+              style="position:absolute;top:7px;right:7px;width:6px;height:6px;background:#DC2626;border-radius:50%;border:1.5px solid white;"></span>
+          </button>
+          <div onclick="appNav('profile')" id="app-profile-avatar"
+            style="width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,#DC2626,#EA580C);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:12px;font-weight:800;color:white;">
+            AK</div>
+        </div>
+      </div>
+    </div>
+
+    <div id="app-content"></div>
+
+    <!-- Floating SOS Button -->
+    <button id="sos-fab" onclick="emergencySOS()">
+      <span style="font-size:22px;">🆘</span>
+      <span>SOS</span>
+    </button>
+
+    <!-- Bottom Nav -->
+    <nav class="botnav">
+      <div class="botnav-inner">
+        <button class="nb on" id="nav-home" onclick="appNav('home')">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+            <polyline points="9 22 9 12 15 12 15 22" />
+          </svg>
+          <span>Home</span>
+        </button>
+        <button class="nb" id="nav-post" onclick="appNav('post')">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10" />
+            <line x1="12" y1="8" x2="12" y2="16" />
+            <line x1="8" y1="12" x2="16" y2="12" />
+          </svg>
+          <span>Post</span>
+        </button>
+        <button class="nb" id="nav-alerts" onclick="appNav('alerts')">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+            <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+          </svg>
+          <span>Alerts</span>
+        </button>
+        <button class="nb" id="nav-profile" onclick="appNav('profile')">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+            <circle cx="12" cy="7" r="4" />
+          </svg>
+          <span>Profile</span>
+        </button>
+      </div>
+    </nav>
+  </div>
+
+  <!-- Modal & Toast roots -->
+  <div id="modal-root"></div>
+  <div class="toast-wrap" id="toast-root"></div>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="script.js?v=2026-06-12"></script>
+</body>
+
+</html>
