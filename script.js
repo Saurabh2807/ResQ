@@ -1237,19 +1237,57 @@ window.openChat = async function (resourceId) {
 
   showToast('Opening chat room...');
   try {
-    const p1 = currentUser.id < resource.user_id ? currentUser.id : resource.user_id;
-    const p2 = currentUser.id < resource.user_id ? resource.user_id : currentUser.id;
-    let { data: chatRoom, error: fetchErr } = await supabaseClient.from('chats').select('*')
-      .eq('participant_1', p1).eq('participant_2', p2).eq('resource_id', resourceId);
+    const myId = currentUser.id;
+    const ownerId = resource.user_id;
+
+    // ── Debug log (task item 3) ────────────────────────────────────────────
+    console.group('[openChat] Debug info');
+    console.log('currentUser.id  :', myId);
+    console.log('resource.user_id:', ownerId);
+    console.log('resource_id     :', resourceId);
+    console.groupEnd();
+
+    // ── Self-chat guard (task items 4–6) ──────────────────────────────────
+    // This is the ROOT CAUSE: when the logged-in user owns the resource
+    // both participant slots collapse to the same UUID → constraint violation.
+    if (!ownerId || myId === ownerId) {
+      showToast('⚠️ You cannot chat with yourself.');
+      window.closeChat();          // restore nav / FAB / topbar
+      return;
+    }
+
+    // ── Safe deterministic ordering (task item 5) ─────────────────────────
+    // String comparison is used only for ordering; never produces equal values
+    // because we already confirmed myId !== ownerId above.
+    const p1 = myId < ownerId ? myId : ownerId;
+    const p2 = myId < ownerId ? ownerId : myId;
+
+    console.log('[openChat] participant_1:', p1, '| participant_2:', p2);
+
+    // ── Lookup existing chat before creating (task item 8) ────────────────
+    let { data: chatRoom, error: fetchErr } = await supabaseClient
+      .from('chats')
+      .select('*')
+      .eq('participant_1', p1)
+      .eq('participant_2', p2)
+      .eq('resource_id', resourceId);
     if (fetchErr) throw fetchErr;
+
     if (!chatRoom || chatRoom.length === 0) {
-      const { data: newRoom, error: insErr } = await supabaseClient.from('chats')
-        .insert([{ participant_1: p1, participant_2: p2, resource_id: resourceId }]).select().single();
+      console.log('[openChat] No existing room — creating new chat…');
+      const { data: newRoom, error: insErr } = await supabaseClient
+        .from('chats')
+        .insert([{ participant_1: p1, participant_2: p2, resource_id: resourceId }])
+        .select()
+        .single();
       if (insErr) throw insErr;
       activeChatRoomId = newRoom.id;
+      console.log('[openChat] Created chat room id:', activeChatRoomId);
     } else {
       activeChatRoomId = chatRoom[0].id;
+      console.log('[openChat] Resumed existing chat room id:', activeChatRoomId);
     }
+
     const { data: messages, error: msgError } = await supabaseClient.from('messages').select('*')
       .eq('chat_id', activeChatRoomId).order('created_at', { ascending: true });
     if (msgError) throw msgError;
