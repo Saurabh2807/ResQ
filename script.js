@@ -376,9 +376,15 @@ window.submitLogin = async function () {
     const nameVal = document.getElementById('login-fullname')?.value?.trim() || 'Anonymous';
     const phoneVal = document.getElementById('login-phone')?.value?.trim() || '';
     showToast('Creating profile...');
+    const redirectUrl = window.location.hostname.includes('github.io')
+      ? 'https://saurabh2807.github.io/delete/'
+      : window.location.origin + window.location.pathname;
     const { data, error } = await supabaseClient.auth.signUp({
       email: emailVal, password: passVal,
-      options: { data: { full_name: nameVal, phone_number: phoneVal } }
+      options: {
+        data: { full_name: nameVal, phone_number: phoneVal },
+        emailRedirectTo: redirectUrl
+      }
     });
     if (error) { showToast(`⚠️ Signup Failed: ${error.message}`); return; }
     showToast('👋 Sign up successful! Sign-in initialized.');
