@@ -584,6 +584,8 @@ async function appNav(tab) {
   } else if (tab === 'alerts') {
     await loadNotifications();
     renderAlerts();
+  } else if (tab === 'chats') {
+    renderChatsInbox();
   } else if (tab === 'profile') {
     await loadProfileCounts();
     renderProfile();
@@ -1630,11 +1632,90 @@ window.toggleFaq = function (idx) {
 // LIVE REAL-TIME CHAT VIEW
 // ══════════════════════════════════════════════════════════════════════════
 window.openChat = async function (resourceId) {
-  const resource = dbResources.find(r => String(r.id) === String(resourceId));
-  if (!resource) {
-    showToast('⚠️ Resource post not found');
-    return;
+  let resource = dbResources.find(r => String(r.id) === String(resourceId));
+  if (!resource && supabaseClient) {
+    try {
+      const { data, error } = await supabaseClient
+        .from('resources')
+        .select(`
+          *,
+          profiles:user_id (
+            full_name,
+            profile_photo
+          )
+        `)
+        .eq('id', resourceId)
+        .single();
+        
+      if (data) {
+        resource = {
+          id: data.id,
+          user_id: data.user_id,
+          type: data.category.toLowerCase(),
+          emoji: data.category === 'Blood' ? '🩸' : data.category === 'Transport' ? '🚑' : data.category === 'Medicine' ? '💊' : data.category === 'Food' ? '🍱' : '🏠',
+          direction: data.resource_type,
+          title: data.title,
+          description: data.description,
+          loc: data.location,
+          area: data.location,
+          km: 1.5,
+          urgent: data.urgency_level === 'urgent',
+          contact: data.contact_number,
+          name: data.profiles?.full_name || 'Anonymous User',
+          posted: timeAgo(new Date(data.created_at)),
+          lat: data.latitude,
+          lng: data.longitude
+        };
+      }
+    } catch (e) {
+      console.error(e);
+    }
   }
+
+  if (!resource) {
+    const sample = SAMPLE_RESOURCES.find(r => String(r.id) === String(resourceId));
+    if (sample) {
+      resource = {
+        id: sample.id,
+        user_id: 'mock-user-id',
+        type: sample.type,
+        emoji: sample.emoji,
+        direction: sample.direction,
+        title: sample.title,
+        description: `Mock coordinates set in ${sample.area || sample.loc}.`,
+        loc: sample.area || sample.loc,
+        area: sample.area || sample.loc,
+        km: sample.km || 1.5,
+        urgent: sample.urgent,
+        contact: sample.contact,
+        name: sample.name,
+        posted: sample.posted || '5 min ago',
+        lat: sample.lat,
+        lng: sample.lng
+      };
+    } else {
+      // Fallback
+      resource = {
+        id: resourceId,
+        user_id: 'mock-user-id',
+        type: 'general',
+        emoji: '💬',
+        direction: 'need',
+        title: 'Direct Message',
+        description: '',
+        loc: 'Unknown',
+        area: 'Unknown',
+        km: 1.0,
+        urgent: false,
+        contact: '',
+        name: 'Chat Partner',
+        posted: 'Just now',
+        lat: 23.25,
+        lng: 77.41
+      };
+    }
+  }
+
   if (!currentUser) {
     showToast('⚠️ Please sign in to message');
     return;
@@ -1979,6 +2060,115 @@ function showOfflineBanner() {
     </div>
   `;
   document.body.appendChild(banner);
+}
+
+// ── Chats Inbox Screen Renderer ───────────────────────────────────────────
+async function renderChatsInbox() {
+  const content = document.getElementById('app-content');
+  if (!content) return;
+
+  content.innerHTML = `
+    <div style="padding:16px;">
+      <div class="section-label" style="margin-bottom:12px;">Active Conversations</div>
+      <div id="chats-list-container" style="display:flex; flex-direction:column; gap:12px;">
+        <div style="text-align:center; padding:32px; color:#94A3B8;">Loading conversations...</div>
+      </div>
+    </div>`;
+
+  if (!currentUser) {
+    document.getElementById('chats-list-container').innerHTML = `
+      <div style="text-align:center; padding:32px; color:#94A3B8;">
+        <span style="font-size:32px;">🔒</span>
+        <div style="font-size:15px; font-weight:700; color:#475569; margin-top:8px;">Sign in required</div>
+        <div style="font-size:13px; margin-top:2px;">Please log in to view your inbox.</div>
+      </div>`;
+    return;
+  }
+
+  // Load chats
+  let chatsData = [];
+  if (!supabaseClient) {
+    chatsData = mockChats.map(c => ({
+      id: c.id,
+      resource_id: c.resource_id,
+      peer_name: c.peer_name,
+      title: c.resource_title || 'Direct Chat',
+      emoji: c.emoji || '💬',
+      unread_count: c.messages.filter(m => m.sender === 'received').length // Mock unread count
+    }));
+  } else {
+    try {
+      const { data, error } = await supabaseClient
+        .from('chats')
+        .select(`
+          *,
+          resource:resource_id (
+            id,
+            title,
+            category
+          ),
+          participant_1_prof:participant_1 ( full_name ),
+          participant_2_prof:participant_2 ( full_name )
+        `)
+        .or(`participant_1.eq.${currentUser.id},participant_2.eq.${currentUser.id}`)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      // For each chat, fetch unread messages count
+      chatsData = await Promise.all(data.map(async c => {
+        const isPart1 = c.participant_1 === currentUser.id;
+        const peerName = isPart1 ? c.participant_2_prof?.full_name : c.participant_1_prof?.full_name;
+        const emoji = c.resource?.category === 'Blood' ? '🩸' : c.resource?.category === 'Transport' ? '🚑' : c.resource?.category === 'Medicine' ? '💊' : c.resource?.category === 'Food' ? '🍱' : '🏠';
+        
+        // Fetch unread count for this chat room
+        const { count: unreadCount } = await supabaseClient
+          .from('messages')
+          .select('*', { count: 'exact', head: true })
+          .eq('chat_id', c.id)
+          .neq('sender_id', currentUser.id)
+          .eq('is_read', false);
+
+        return {
+          id: c.id,
+          resource_id: c.resource_id,
+          peer_name: peerName || 'Anonymous',
+          title: c.resource?.title || 'Direct Chat',
+          emoji: emoji,
+          unread_count: unreadCount || 0
+        };
+      }));
+    } catch (err) {
+      console.error(err);
+      showToast('⚠️ Error loading inbox');
+    }
+  }
+
+  const container = document.getElementById('chats-list-container');
+  if (chatsData.length === 0) {
+    container.innerHTML = `
+      <div style="text-align:center; padding:48px 20px; color:#94A3B8;">
+        <span style="font-size:40px;">✉️</span>
+        <div style="font-size:15px; font-weight:700; color:#475569; margin-top:8px;">No active conversations</div>
+        <div style="font-size:13px; margin-top:2px;">When you coordinate with helpers, chats will show up here.</div>
+      </div>`;
+    return;
+  }
+
+  container.innerHTML = chatsData.map(c => `
+    <div style="display:flex; align-items:center; gap:12px; background:#FFFFFF; border:1.5px solid #E2E8F0; border-radius:16px; padding:14px; box-shadow: 0 2px 8px rgba(0,0,0,0.02); transition: box-shadow 0.15s;">
+      <div style="width:44px; height:44px; border-radius:12px; background:#FEF2F2; display:flex; align-items:center; justify-content:center; font-size:22px; flex-shrink:0;">${c.emoji}</div>
+      <div style="flex:1; min-width:0;">
+        <div style="display:flex; align-items:center; gap:8px;">
+          <span style="font-size:14px; font-weight:800; color:#0F172A; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${c.peer_name}</span>
+          ${c.unread_count > 0 ? `<span style="background:#DC2626; color:white; font-size:10px; font-weight:800; padding:2px 7px; border-radius:999px; margin-left:auto; display:inline-flex; align-items:center; justify-content:center; min-width:18px; height:18px;">${c.unread_count}</span>` : ''}
+        </div>
+        <div style="font-size:12px; color:#64748B; margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">About: ${c.title}</div>
+      </div>
+      <button onclick="openChat('${c.resource_id}')" style="height:36px; padding:0 14px; background:linear-gradient(135deg, #2563EB, #1D4ED8); color:white; font-size:12px; font-weight:700; border:none; border-radius:10px; cursor:pointer; flex-shrink:0; display:flex; align-items:center; gap:4px; box-shadow:0 3px 8px rgba(37,99,235,0.15);">
+        💬 Open
+      </button>
+    </div>`).join('');
 }
 
 // ── Init State / Auth State Listener ───────────────────────────────────────
