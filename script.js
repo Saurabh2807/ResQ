@@ -402,6 +402,8 @@ window.submitLogin = async function () {
     const redirectUrl = window.location.hostname.includes('github.io')
       ? 'https://saurabh2807.github.io/delete/'
       : window.location.origin + window.location.pathname;
+    
+    console.log('SIGNUP EMAIL:', emailVal);
     const { data, error } = await supabaseClient.auth.signUp({
       email: emailVal, password: passVal,
       options: {
@@ -409,12 +411,23 @@ window.submitLogin = async function () {
         emailRedirectTo: redirectUrl
       }
     });
-    if (error) { showToast(`⚠️ Signup Failed: ${error.message}`); return; }
+    if (error) {
+      console.error('SIGNUP ERROR:', error);
+      showToast(`⚠️ Signup Failed: ${error.message}`);
+      return;
+    }
+    console.log('SIGNUP RESPONSE:', data);
     showToast('📧 Verification email sent.\nPlease check your inbox and confirm your email.');
   } else {
     showToast('Authenticating...');
+    console.log('LOGIN EMAIL:', emailVal);
     const { data, error } = await supabaseClient.auth.signInWithPassword({ email: emailVal, password: passVal });
-    if (error) { showToast(`⚠️ Auth Failed: ${error.message}`); return; }
+    if (error) {
+      console.error('LOGIN ERROR:', error);
+      showToast(`⚠️ Auth Failed: ${error.message}`);
+      return;
+    }
+    console.log('LOGIN RESPONSE:', data);
   }
 };
 
