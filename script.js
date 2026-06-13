@@ -368,7 +368,7 @@ window.toggleAuthMode = function () {
     if (subtitle) subtitle.textContent = "Sign in to access emergency resources";
     if (submitBtn) submitBtn.textContent = "Sign In";
     if (options) options.style.display = "flex";
-    if (footerText) footerText.innerHTML = `Don't have an account? <a href="#" onclick="event.preventDefault(); isSignUpMode=true; toggleAuthMode();">Sign up free</a>`;
+    if (footerText) footerText.innerHTML = `Don't have an account? <a href="#" onclick="event.preventDefault(); toggleAuthMode();">Sign up free</a>`;
   } else {
     isSignUpMode = true;
     signupFields.forEach(f => f.classList.remove('hidden'));
@@ -376,7 +376,7 @@ window.toggleAuthMode = function () {
     if (subtitle) subtitle.textContent = "Register today to start coordinating help";
     if (submitBtn) submitBtn.textContent = "Sign Up Free";
     if (options) options.style.display = "none";
-    if (footerText) footerText.innerHTML = `Already have an account? <a href="#" onclick="event.preventDefault(); isSignUpMode=false; toggleAuthMode();">Sign in</a>`;
+    if (footerText) footerText.innerHTML = `Already have an account? <a href="#" onclick="event.preventDefault(); toggleAuthMode();">Sign in</a>`;
   }
 };
 
@@ -400,7 +400,7 @@ window.submitLogin = async function () {
     const phoneVal = document.getElementById('login-phone')?.value?.trim() || '';
     showToast('Creating profile...');
     const redirectUrl = window.location.hostname.includes('github.io')
-      ? 'https://saurabh2807.github.io/delete/'
+      ? 'https://saurabh2807.github.io/ResQ/'
       : window.location.origin + window.location.pathname;
     
     console.log('SIGNUP EMAIL:', emailVal);
@@ -443,7 +443,7 @@ window.submitGoogleLogin = async function () {
   }
   showToast('🔑 Redirecting to Google Login...');
   const redirectUrl = window.location.hostname.includes('github.io')
-    ? 'https://saurabh2807.github.io/delete/'
+    ? 'https://saurabh2807.github.io/ResQ/'
     : window.location.origin;
   const { error } = await supabaseClient.auth.signInWithOAuth({
     provider: 'google',
