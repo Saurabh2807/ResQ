@@ -242,6 +242,12 @@ CREATE POLICY "Notifications update owner" ON public.notifications
     USING (auth.uid() = user_id)
     WITH CHECK (auth.uid() = user_id);
 
+-- Authenticated users can insert their own notifications
+CREATE POLICY "Notifications insert authenticated" ON public.notifications
+    FOR INSERT TO authenticated
+    WITH CHECK (auth.uid() = user_id);
+
+
 -- =========================================================================
 -- 5. AUTOMATIC PROFILE GENERATION TRIGGER
 -- =========================================================================

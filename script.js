@@ -807,11 +807,15 @@ window.submitPost = async function () {
     }]).select();
     if (error) throw error;
     showToast('✅ Posted successfully!');
-    await supabaseClient.from('notifications').insert([{
-      user_id: currentUser.id, type: 'new_resource_match',
-      title: `🤝 Resource Posted: ${title}`,
-      content: `Your resource was listed successfully in ${loc}.`
-    }]);
+    try {
+      await supabaseClient.from('notifications').insert([{
+        user_id: currentUser.id, type: 'new_resource_match',
+        title: `🤝 Resource Posted: ${title}`,
+        content: `Your resource was listed successfully in ${loc}.`
+      }]);
+    } catch (notifErr) {
+      console.warn('Failed to insert user notification logs locally:', notifErr);
+    }
     if (direction === 'offer') { await selectRole('seeker'); } else { await selectRole('provider'); }
   } catch (err) {
     console.error(err);
