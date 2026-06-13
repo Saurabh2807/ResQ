@@ -400,7 +400,7 @@ window.submitLogin = async function () {
     const phoneVal = document.getElementById('login-phone')?.value?.trim() || '';
     showToast('Creating profile...');
     const redirectUrl = window.location.hostname.includes('github.io')
-      ? 'https://saurabh2807.github.io/ResQ/'
+      ? 'https://saurabh2807.github.io/delete/'
       : window.location.origin + window.location.pathname;
     
     console.log('SIGNUP EMAIL:', emailVal);
@@ -443,7 +443,7 @@ window.submitGoogleLogin = async function () {
   }
   showToast('🔑 Redirecting to Google Login...');
   const redirectUrl = window.location.hostname.includes('github.io')
-    ? 'https://saurabh2807.github.io/ResQ/'
+    ? 'https://saurabh2807.github.io/delete/'
     : window.location.origin;
   const { error } = await supabaseClient.auth.signInWithOAuth({
     provider: 'google',
